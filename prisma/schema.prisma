@@ -1,0 +1,193 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URL")
+}
+
+// Prisma schema
+
+// enums 
+enum Role {
+    admin
+    trainer
+    user
+}
+
+enum UserState {
+    Active
+    Inactive
+}
+
+enum Gender {
+    male
+    female
+}
+
+enum Goal {
+    gain_weight
+    lose_weight
+    get_fitter
+    get_stronger
+    get_healthier
+    get_more_flexible
+    get_more_muscular
+    learn_the_basics
+    others
+}
+
+enum Muscle {
+    Biceps
+    Triceps
+}
+
+enum Month {
+    January
+    February
+    March
+    April
+    May
+    June
+    July
+    August
+    September
+    October
+    November
+    December
+}
+
+// end enums
+
+// User
+
+model User {
+    id       String    @id @default(auto()) @map("_id") @db.ObjectId
+    name     String
+    email    String    @unique
+    password String
+    image    String?
+    role     Role
+    state    UserState
+    goal     Goal
+    gender   Gender
+    age      Int?      @default(18)
+    height   Int?      @default(100)
+    weight   Int?      @default(50)
+
+    notifReceiver Notification[] @relation("userId")
+    notifSender   Notification[] @relation("senderId")
+
+    attendanceTrack Attendance[] @relation("attendance_track")
+
+    PasswordResetToken PasswordResetToken[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
+    id        String    @id @default(auto()) @map("_id") @db.ObjectId
+    token     String    @unique
+    resetAt   DateTime?
+    user      User      @relation(fields: [userId], references: [id])
+    userId    String    @map("userId") @db.ObjectId
+    createdAt DateTime  @default(now())
+}
+
+// TODO: check it
+model Fees {
+    id            String    @id @default(auto()) @map("_id") @db.ObjectId
+    email         String
+    month         Month
+    year          String
+    message       String
+    amount        Int
+    isPaid        Boolean   @default(false)
+    transactionId String?
+    paymentDate   DateTime?
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
+}
+
+// exercise 
+
+model Exercises {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    name      String
+    muscles   Muscle[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model ExcerciseRoutine {
+    id        String    @id @default(auto()) @map("_id") @db.ObjectId
+    studentId String    @map("studentId") @db.ObjectId
+    fromDate  DateTime
+    toDate    DateTime
+    WorkOuts  WorkOut[]
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+}
+
+
+model WorkOut {
+    id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+    exerciseId           String
+    exerciseName         String
+    sets                 Int
+    reps                 Int
+    kg                   Int?
+    rest                 Int?
+    exercise             ExcerciseRoutine @relation(fields: [exerciseAssignmentId], references: [id])
+    exerciseAssignmentId String   @db.ObjectId
+
+    createdAt            DateTime @default(now())
+    updatedAt            DateTime @updatedAt
+}
+
+enum NotificationType {
+    diet
+    exercise
+    fees
+    payment
+    reminder
+    message
+    present
+}
+
+model Notification {
+    id                String           @id @default(auto()) @map("_id") @db.ObjectId
+    notification_text String
+    type              NotificationType
+    userEmail         String?
+
+    user   User?   @relation(fields: [userId], references: [id], name: "userId")
+    userId String? @map("userId") @db.ObjectId
+
+    sender    User?    @relation(fields: [senderId], references: [id], name: "senderId")
+    senderId  String?  @map("senderId") @db.ObjectId
+    read      Boolean  @default(false)
+    pathName  String
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+    id        String  @id @default(auto()) @map("_id") @db.ObjectId
+    fromTime  String
+    toTime    String
+    isPresent Boolean @default(false)
+    date      String
+
+    student   User?   @relation(fields: [studentId], references: [id], name: "attendance_track")
+    studentId String? @map("attendance_track") @db.ObjectId
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
