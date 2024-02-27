@@ -2,9 +2,9 @@ name: build-check
 
 on:
   push:
-    branches: [GMS-05-add-build-check]
+    branches: [develop]
   pull_request:
-    branches: [GMS-05-add-build-check]
+    branches: [develop]
 
 jobs:
   avoid-redundancy:
